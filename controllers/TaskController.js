@@ -20,20 +20,10 @@ class TaskController {
         return response.end(JSON.stringify({error: 'Invalid input'}))
       }
       
-      try {
-        const db = await sqliteConnection()
-        await db.run("INSERT INTO tasks (title, description) VALUES (?, ?)", [title, description])
-
-        const { lastID } = await db.get('SELECT last_insert_rowid() as lastID')
-
-        response.writeHead(201, {'Content-Type': 'application/json'})
-        return response.end(JSON.stringify({ taskId: lastID }))
-      } 
-      catch (error) {
-        console.log(error)
-        response.writeHead(500, {'Content-Type': 'application/json'})
-        return response.end(JSON.stringify({ error: 'Internal server error' }))
-      }
+      const id = await this.saveTask(title, description)  
+      response.writeHead(201, { 'Content-Type': 'application/json' })
+      return response.end(JSON.stringify({ taskId: id }))
+      
     })
 
   }
@@ -79,7 +69,7 @@ class TaskController {
   
   async finishTask(request, response) {
     const { pathname } = url.parse(request.url)
-    const match = pathname.match(/^\/tasks\/(\d+)$/)
+    const match = pathname.match(/^\/tasks\/(\d+)\/complete$/)
     const id = match ? match[1] : null
 
     if (id) {
@@ -168,6 +158,20 @@ class TaskController {
         return response.end(JSON.stringify({ error: 'Bad request' }))
       }
     })
+  }
+
+  async saveTask(title, description) {
+    try {
+      const db = await sqliteConnection()
+      await db.run("INSERT INTO tasks (title, description) VALUES (?, ?)", [title, description])
+
+      const { lastID } = await db.get('SELECT last_insert_rowid() as lastID')
+      return lastID
+    } catch (error) {
+      console.log(error)
+      response.writeHead(500, { 'Content-Type': 'application/json' })
+      return response.end(JSON.stringify({ error: 'Internal server error' }))
+    }
   }
 }
 
