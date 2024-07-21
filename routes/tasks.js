@@ -15,6 +15,9 @@ function tasks (request, response) {
   else if (method === 'PATCH') {  
     taskController.finishTask(request, response)
   }
+  else if (method === 'PUT') {
+    taskController.update(request, response)
+  }
   else {
     response.statusCode = 405
     response.end('Method Not Allowed')

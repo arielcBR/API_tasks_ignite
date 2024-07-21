@@ -113,6 +113,62 @@ class TaskController {
       return response.end(JSON.stringify({ error: 'Bad request' }))
     }
   }
+
+  async update(request, response) {
+    const { pathname } = url.parse(request.url)
+    const match = pathname.match(/^\/tasks\/(\d+)$/)
+    const id = match ? match[1] : null
+
+    let body = ''
+
+    request.on('data', chunk => {
+      body += chunk.toString()
+    })
+
+    request.on('end', async () => {
+      if (id) {
+        try {
+          const db = await sqliteConnection()
+  
+          const task = await db.get('SELECT * from tasks WHERE id = ?', [id])
+  
+          if (!task) {
+            response.writeHead(400, { 'Content-Type': 'application/json' })
+            return response.end(JSON.stringify({ error: 'Bad request' }))
+          }
+
+          const data = JSON.parse(body)
+  
+          if (data.title) {
+             task.title = data.title
+          }
+
+          if (data.description) {
+            task.description = data.description
+          }
+
+          const currentDate = new Date().toISOString()
+          task.updated_at = currentDate
+  
+          await db.run(
+            'UPDATE tasks SET title = ?, description = ?, updated_at = ? WHERE id = ?',
+            [task.title, task.description, task.updated_at, id]
+          )
+  
+          response.writeHead(200, { 'Content-Type': 'application/json' })
+          return response.end()
+        } catch (error) {
+          console.log(error)
+          response.writeHead(500, { 'Content-Type': 'application/json' })
+          return response.end(JSON.stringify({ error: 'Internal server error' }))
+        }
+      }
+      else {
+        response.writeHead(400, { 'Content-Type': 'application/json' })
+        return response.end(JSON.stringify({ error: 'Bad request' }))
+      }
+    })
+  }
 }
 
 module.exports = new TaskController()
