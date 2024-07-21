@@ -4,7 +4,7 @@ const tasks = require('./tasks')
 function router(request, response) {
   const { pathname } = url.parse(request.url, true)
   
-  if(pathname === '/tasks') {
+  if (pathname.startsWith('/tasks')) {
     tasks(request, response)
   }
   else {

@@ -6,6 +6,15 @@ function tasks (request, response) {
   if(method === 'POST'){
     taskController.create(request, response)
   }
+  else if (method === 'GET') {
+    taskController.index(request, response)
+  }
+  else if (method === 'DELETE') {
+    taskController.delete(request, response)
+  }
+  else if (method === 'PATCH') {  
+    taskController.finishTask(request, response)
+  }
   else {
     response.statusCode = 405
     response.end('Method Not Allowed')
